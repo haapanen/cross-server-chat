@@ -14,8 +14,12 @@ export async function fileExists(filepath: string) {
     });
 }
 
-export async function fileExistsSync(filepath: string) {
-    return (await fileExists(filepath));
+export function fileExistsSync(filepath: string) {
+    try {
+        return !fs.statSync(filepath).isDirectory();
+    } catch (e) {
+        return false;
+    }
 }
 
 export function currentTimestamp() {

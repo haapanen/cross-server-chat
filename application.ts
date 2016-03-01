@@ -3,6 +3,7 @@
 ///<reference path="typings/colors/colors.d.ts"/>
 ///<reference path="typings/prompt/prompt.d.ts"/>
 
+import {LogWatcher} from "./core";
 "use strict";
 import * as Core from "./core";
 import * as Util from "./utilities";
@@ -69,8 +70,9 @@ class Application {
                 },
                 port: {
                     message: "port must be between 1 and 65536",
-                    default: 27960,
-                    type: "integer"
+                    default: "27960",
+                    type: "number",
+                    required: true
                 },
                 filepath: {
                     message: "filepath must exist",
@@ -83,7 +85,7 @@ class Application {
                     required: true
                 }
             }
-        }, async (err, result) => {
+        } as prompt.Schema, async (err, result) => {
             if (err) {
                 return console.error(Util.currentTimestamp(), colors.red("error: ") + `failed to read input from console.`, err);
             }
@@ -111,7 +113,18 @@ class Application {
         let file = (options && options.config) ? options.config : "./config.json";
         file = path.resolve(file);
 
+        let config: Core.IConfig;
+        try {
+            config = await Core.loadConfig(file);
+        } catch (e) {
+        }
+        if (!config || config.servers.length === 0) {
+            return console.error("error: ".red + "add servers before starting the application");
+        }
 
+        let logWatcher = new LogWatcher({
+            servers: config.servers
+        });
     }
 }
 
