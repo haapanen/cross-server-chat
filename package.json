@@ -1,7 +1,7 @@
 {
   "name": "cross-server-chat",
   "version": "1.0.0",
-  "description": "A Node.js application that parses log files and sends chat messages from one server to all linked servers.",
+  "description": "A Node.js application that parses log files and sends chat messages from one Wolfenstein: Enemy Territory server to all linked servers.",
   "main": "application.js",
   "dependencies": {
     "chokidar": "^1.4.3",
