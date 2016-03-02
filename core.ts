@@ -1,10 +1,11 @@
+"use strict";
 ///<reference path="typings/node/node.d.ts"/>
 ///<reference path="typings/colors/colors.d.ts"/>
 ///<reference path="typings/chokidar/chokidar.d.ts"/>
 
-
+import {SendTo} from "./handler";
+import {Handler} from "./handler";
 import {EventEmitter} from "events";
-"use strict";
 import * as fs from "fs";
 import * as Util from "./utilities";
 import * as colors from "colors";
@@ -70,7 +71,12 @@ export class LogWatcher extends EventEmitter {
                 }
 
                 this.fd = fd;
-                chokidar.watch(server.filepath).on('change', this.fileChanged.bind(this));
+                // use polling as fs and chokidar watch with events is rather unreliable
+                chokidar.watch(server.filepath, {
+                    usePolling: true,
+                    interval: 100
+                }).on('change', this.fileChanged.bind(this));
+                console.log(`Watching server ${server.host}:${server.port} log file: ${server.filepath}`);
             });
         });
     }
@@ -86,6 +92,7 @@ export class LogWatcher extends EventEmitter {
                 return this.emit("error", err);
             }
 
+            this.previousSize = stat.size;
             this.emit("bytes", buffer);
         });
     }
@@ -93,21 +100,74 @@ export class LogWatcher extends EventEmitter {
 
 export interface ICrossServerChatOptions {
     servers: Array<IServer>;
+    handlers: Array<Handler>;
 }
 
 export class CrossServerChat {
     private logWatchers: Array<LogWatcher> = [];
+    private servers: Array<IServer> = [];
+    private handlers: Array<Handler> = [];
     constructor(options: ICrossServerChatOptions) {
         if (!options || !options.servers || options.servers.length === 0) {
-            throw "options must be defined and have atleast 1 server specified.";
+            throw "options must be defined and have at least 1 server specified.";
         }
 
         options.servers.forEach((server, idx) => {
             let logWatcher = new LogWatcher(server);
             logWatcher.on("bytes", (buffer: Buffer) => {
-                
+                this.newBytes(idx, buffer);
             });
             this.logWatchers.push(logWatcher);
+        });
+
+        this.servers = options.servers;
+        this.handlers = options.handlers;
+    }
+
+    private newBytes(index: number, buffer: Buffer) {
+        let otherServers = this.servers.filter((server, idx) => {
+            return idx !== index;
+        });
+
+        let lines = buffer.toString().split("\n");
+
+        lines.forEach((line) => {
+            if (line.trim().length === 0) {
+                return;
+            }
+
+            this.handlers.forEach((handler) => {
+                let result = handler.handle(line);
+                if (result.length === 0) {
+                    return;
+                }
+
+                switch (handler.sendTo) {
+                    case SendTo.OriginalServer:
+                        this.sendMessage([this.servers[index]], result);
+                        break;
+                    case SendTo.OtherServers:
+                        this.sendMessage(otherServers, result);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+    }
+
+    private sendMessage(servers:IServer[], messages:Array<String>) {
+        if (servers.length === 0 || messages.length === 0) {
+            return;
+        }
+
+        console.log("Sending messages:");
+        messages.forEach((message) => {
+            console.log(message);
+        });
+        console.log("To servers:");
+        servers.forEach((server) => {
+            console.log(server.host + ":" + server.port);
         });
     }
 }

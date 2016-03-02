@@ -2,9 +2,9 @@
 ///<reference path="typings/commander/commander.d.ts"/>
 ///<reference path="typings/colors/colors.d.ts"/>
 ///<reference path="typings/prompt/prompt.d.ts"/>
-
-import {LogWatcher} from "./core";
 "use strict";
+import {Handler} from "./handler";
+import {CrossServerChat} from "./core";
 import * as Core from "./core";
 import * as Util from "./utilities";
 import * as commander from "commander";
@@ -122,9 +122,15 @@ class Application {
             return console.error("error: ".red + "add servers before starting the application");
         }
 
-        let logWatcher = new LogWatcher({
-            servers: config.servers
-        });
+        try {
+            let logWatcher = new CrossServerChat({
+                servers: config.servers,
+                handlers: [new Handler()]
+            });
+        } catch (e) {
+            console.log(e);
+        }
+
     }
 }
 
