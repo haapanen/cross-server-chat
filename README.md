@@ -4,20 +4,25 @@ A Node.js application that parses log files and sends chat messages from one Wol
 ## Usage
 
 Download the source code
-`git clone https://github.com/haapanen/cross-server-chat.git`
-`cd cross-server-chat`
+```git clone https://github.com/haapanen/cross-server-chat.git```
+```cd cross-server-chat```
 
 Install TypeScript compiler
-`npm install -g typescript`
+```npm install -g typescript```
 
 Compile the source code
-`tsc`
+```tsc```
 
 Install necessary libraries
-`npm install`
+```npm install```
 
 Create linked servers
-`node application.js add`
+```node application.js add```
+
+Add handlers to the config.json handlers array.
+```{ servers: [...], handlers: ["say-handler"] }```
 
 Start application
-`node application.js start`
+```node application.js start```
+
+
