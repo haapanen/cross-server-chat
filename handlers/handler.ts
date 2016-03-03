@@ -1,4 +1,5 @@
 "use strict";
+import {IServer} from "../core";
 
 export enum SendTo {
     None,
@@ -11,7 +12,7 @@ export interface IHandlerOptions {
     sendTo: SendTo;
 }
 
-export class Handler {
+export class BaseHandler {
     get sendTo() {
         return (this.options && this.options.sendTo) ? this.options.sendTo : SendTo.OtherServers;
     };
@@ -22,7 +23,7 @@ export class Handler {
         this.options = options;
     }
 
-    handle(line: string): Array<string> {
+    handle(line: string, server: IServer): Array<string> {
         return [line];
     }
 }

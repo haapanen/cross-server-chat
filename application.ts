@@ -3,7 +3,7 @@
 ///<reference path="typings/colors/colors.d.ts"/>
 ///<reference path="typings/prompt/prompt.d.ts"/>
 "use strict";
-import {Handler} from "./handler";
+import {BaseHandler} from "./handlers/handler";
 import {CrossServerChat} from "./core";
 import * as Core from "./core";
 import * as Util from "./utilities";
@@ -56,7 +56,7 @@ class Application {
                 return console.error(e);
             }
         } else {
-            config = {servers: []};
+            config = {servers: [], handlers: []};
         }
 
         prompt.start();
@@ -122,10 +122,20 @@ class Application {
             return console.error("error: ".red + "add servers before starting the application");
         }
 
+        let handlers: Array<any>;
+        try  {
+            handlers = [];
+            config.handlers.forEach((handlerName) => {
+                handlers.push(new (require(`./handlers/${handlerName}`).Handler))
+            });
+        } catch (e) {
+            return console.error(e);
+        }
+
         try {
             let logWatcher = new CrossServerChat({
                 servers: config.servers,
-                handlers: [new Handler()]
+                handlers: handlers
             });
         } catch (e) {
             console.log(e);
