@@ -53,7 +53,7 @@ const createPacket = (message: string): Buffer => {
 const sendUdpRequest = (host: string, port: number, message: string, timeout = 1000): Promise<string> => {
     return new Promise<string>((resolve, reject) => {
         const client = dgram.createSocket("udp4");
-        const packet = createPacket("getstatus");
+        const packet = createPacket(message);
 
         // timeout if the server is unreachable
         let timer = setTimeout(() => {
@@ -162,7 +162,6 @@ const setHostNames = (servers:IServer[]) => {
                     servers[index].hostname = hostname;
                 });
 
-                console.log("Set host names");
                 return resolve();
             }).catch((err) => {
                 return reject(err);
@@ -280,7 +279,7 @@ const createWatchers = (servers: IServer[], newMessage: (server: IServer, messag
                         const newBytes = await readBytes(server.fd, server.bytesRead ? server.bytesRead : 0, stat.size - bytesRead);
                         server.bytesRead = stat.size;
 
-                        newMessage(server, newBytes.toString());
+                        newMessage(server, newBytes.toString().trim());
                     }
                 });
             });
@@ -450,7 +449,7 @@ class Application {
 
                         sendToServers.forEach(sendToServer => {
                             let { ipAddress, port } = getIpPort(sendToServer.address);
-                            sendUdpRequest(ipAddress, port, `rcon ${sendToServer.rconPass   word} ${escapeString(parseResult.message)}`);
+                            sendUdpRequest(ipAddress, port, `rcon ${sendToServer.rconPassword} qsay ${escapeString(parseResult.message)}`);
                         });
                     }).catch((err) => {
                         console.error(err);
