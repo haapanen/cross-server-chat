@@ -1,11 +1,16 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "sourceMap": true
-  },
-  "exclude": [
-    "node_modules",
-    "typings"
-  ]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "noImplicitAny": true,
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "outDir": "./build/"
+    },
+    "include": [
+        "**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
 }
