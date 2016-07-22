@@ -24,6 +24,9 @@ interface IServer {
     watcher?: fs.FSWatcher;
     // current number of bytes read
     bytesRead?: number;
+    // UDP packet queue for sending packets as ET limits num of rcon packets to
+    // 1 per 500ms
+    packetQueue: string[];
 }
 
 interface IServerStatus {
@@ -424,6 +427,10 @@ class Application {
             this.servers = [];
         }
 
+        this.servers.forEach(server => {
+            server.packetQueue = server.packetQueue || [];
+        });
+
         this.start();
     }
 
@@ -448,14 +455,22 @@ class Application {
                         }
 
                         sendToServers.forEach(sendToServer => {
-                            let { ipAddress, port } = getIpPort(sendToServer.address);
-                            sendUdpRequest(ipAddress, port, `rcon ${sendToServer.rconPassword} qsay ${escapeString(parseResult.message)}`);
+                            sendToServer.packetQueue.push(`rcon ${sendToServer.rconPassword} qsay ${escapeString(parseResult.message)}`);
                         });
                     }).catch((err) => {
                         console.error(err);
                     });
                 });
             });
+            this.servers.forEach(server => {
+                setInterval(() => {
+                    let message = server.packetQueue.shift();
+                    if (message) {
+                        let { ipAddress, port } = getIpPort(server.address);
+                        sendUdpRequest(ipAddress, port, message);
+                    }
+                }, 510);
+            })
         } catch (exception) {
             console.error(`Could not initialize the cross server chat: ${exception}`);
         }
