@@ -377,6 +377,14 @@ const urlPattern = /(http|https):\/\/[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[
 const testUrlPattern = (server: IServer, message: string): Promise<IParseResult> => {
     return new Promise<IParseResult>((resolve, reject) => {
         try {
+            // Do not print the URL if it's not in a public chat message
+            if (!message.startsWith("say: ")) {
+                return resolve({
+                    message: "",
+                    sendTo: SendTo.None
+                });
+            }
+
             let result = message.match(urlPattern);
             if (result === null) {
                 return resolve({
